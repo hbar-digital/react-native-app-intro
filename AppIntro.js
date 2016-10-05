@@ -117,23 +117,24 @@ export default class AppIntro extends Component {
     };
   }
 
-  onNextBtnClick = (context) => {
-    if (context.state.isScrolling || context.state.total < 2) return;
-    const state = context.state;
-    const diff = (context.props.loop ? 1 : 0) + 1 + context.state.index;
-    let x = 0;
-    if (state.dir === 'x') x = diff * state.width;
-    if (Platform.OS === 'ios') {
-      context.refs.scrollView.scrollTo({ y: 0, x });
-    } else {
-      context.refs.scrollView.setPage(diff);
-      context.onScrollEnd({
-        nativeEvent: {
-          position: diff,
-        },
-      });
+  async onNextBtnClick(context) {
+    if(await this.props.onNextBtnClick(context.state.index)) {
+      if (context.state.isScrolling || context.state.total < 2) return;
+      const state = context.state;
+      const diff = (context.props.loop ? 1 : 0) + 1 + context.state.index;
+      let x = 0;
+      if (state.dir === 'x') x = diff * state.width;
+      if (Platform.OS === 'ios') {
+        context.refs.scrollView.scrollTo({ y: 0, x });
+      } else {
+        context.refs.scrollView.setPage(diff);
+        context.onScrollEnd({
+          nativeEvent: {
+            position: diff,
+          },
+        });
+      }
     }
-    this.props.onNextBtnClick(context.state.index);
   }
 
   setDoneBtnOpacity = (value) => {
@@ -240,11 +241,10 @@ export default class AppIntro extends Component {
     const AnimatedStyle1 = this.getTransform(index, 10, level);
     const AnimatedStyle2 = this.getTransform(index, 0, level);
     const AnimatedStyle3 = this.getTransform(index, 15, level);
-    const imgSource = (typeof img === 'string') ? {uri: img} : img; 
     const pageView = (
       <View style={[this.styles.slide, { backgroundColor }]} showsPagination={false} key={index}>
         <Animated.View style={[this.styles.header, ...AnimatedStyle1.transform]}>
-          <Image style={imgStyle} source={imgSource} />
+          <Image style={imgStyle} source={{ uri: img }} />
         </Animated.View>
         <View style={this.styles.info}>
           <Animated.View style={AnimatedStyle2.transform}>
@@ -362,6 +362,8 @@ AppIntro.propTypes = {
   showSkipButton: PropTypes.bool,
   showDoneButton: PropTypes.bool,
   showDots: PropTypes.bool,
+  renderDoneButton: PropTypes.element,
+  renderSkipButton: PropTypes.element
 };
 
 AppIntro.defaultProps = {
